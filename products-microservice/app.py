@@ -2,6 +2,8 @@ from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
+from config import HOST, PORT
+
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
 db = SQLAlchemy(app)
@@ -51,4 +53,4 @@ def all_products():
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host=HOST, port=PORT)
