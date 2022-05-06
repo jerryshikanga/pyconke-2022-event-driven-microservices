@@ -29,7 +29,7 @@ def account_details(user_id):
         return {}, 404
 
 
-@app.route('account/charge', methods=['POST'])
+@app.route('/account/charge', methods=['POST'])
 def charge_account():
     account_id = request.json['account_id']
     amount = request.json['amount']
