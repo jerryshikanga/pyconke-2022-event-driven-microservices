@@ -1,3 +1,4 @@
+import json
 import logging
 import random
 import pika
@@ -6,7 +7,7 @@ from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
-from config import HOST, PORT, SQLALCHEMY_DATABASE_URI
+from config import HOST, PORT, SQLALCHEMY_DATABASE_URI, RABBITMQ_DEFAULT_QUEUE_NAME
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
@@ -57,7 +58,9 @@ def all_accounts():
     return jsonify(accounts)
 
 
-def publish_message_to_queue(queue='hello', body='Hello world', exchange=''):
+def publish_message_to_queue(body, queue=None, exchange=''):
+    if not queue:
+        queue = RABBITMQ_DEFAULT_QUEUE_NAME
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
     channel = connection.channel()
     channel.queue_declare(queue=queue)
@@ -67,15 +70,16 @@ def publish_message_to_queue(queue='hello', body='Hello world', exchange=''):
 
 @app.route('/seeder', methods=['POST'])
 def seeder():
-    publish_message_to_queue()
-    # accounts_to_create = int(request.json['accounts_to_create'])
-    # min_balance = int(request.json['min_balance'])
-    # max_balance = int(request.json['max_balance'])
-    # for i in range(accounts_to_create):
-    #     balance = random.randint(min_balance, max_balance)
-    #     account = Account(user_id=i, balance=balance)
-    #     db.session.add(account)
-    # db.session.commit()
+    accounts_to_create = int(request.json['accounts_to_create'])
+    min_balance = int(request.json['min_balance'])
+    max_balance = int(request.json['max_balance'])
+    for i in range(accounts_to_create):
+        balance = random.randint(min_balance, max_balance)
+        account = Account(user_id=i, balance=balance, currency="KES")
+        db.session.add(account)
+        body = dict(model="ACCOUNT", data=account.to_dict())
+        publish_message_to_queue(json.dumps(body))
+    db.session.commit()
     return all_accounts()
 
 

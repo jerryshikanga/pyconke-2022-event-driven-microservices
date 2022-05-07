@@ -9,3 +9,8 @@ HOST = os.environ.get("HOST", "0.0.0.0")
 PORT = os.environ.get("PORT", 5001)
 
 SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI', 'sqlite:///app.db')
+
+RABBITMQ_HOST = os.environ.get('RABBITMQ_HOST', "localhost")
+RABBITMQ_PORT = os.environ.get('RABBITMQ_PORT', "5672")
+RABBITMQ_DEFAULT_QUEUE_NAME = os.environ.get('RABBITMQ_DEFAULT_QUEUE_NAME', 'worker')
+

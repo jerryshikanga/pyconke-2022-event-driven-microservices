@@ -2,3 +2,4 @@ migrations/
 app.db
 __pycache__/
 .idea/
+data/

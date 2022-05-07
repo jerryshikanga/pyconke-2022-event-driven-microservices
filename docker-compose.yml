@@ -48,3 +48,34 @@ services:
       - .:/code
     ports:
       - "5004:5004"
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: on-failure
+    volumes:
+      - $PWD/data/rabbitmq/data/:/var/lib/rabbitmq
+      - $PWD/data/rabbitmq/log/:/var/log/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 2s
+      timeout: 10s
+      retries: 5
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+  ordering_worker:
+    build: ordering-microservice/
+    command: bash -c "python worker.py"
+    restart: on-failure
+    environment:
+      HOST: 0.0.0.0
+      PORT: 5009
+      USER_MICROSERVICE_URL: http://users:5002
+      ACCOUNTING_MICROSERVICE_URL: http://accounting:5003
+      PRODUCT_MICROSERVICE_URL: http://products:5004
+      RABBITMQ_HOST: rabbitmq
+    volumes:
+      - .:/code
+    ports:
+      - "5009:5009"
+    depends_on:
+      - rabbitmq
