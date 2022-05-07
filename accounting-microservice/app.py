@@ -1,3 +1,6 @@
+import logging
+import random
+
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -6,6 +9,8 @@ from config import HOST, PORT, SQLALCHEMY_DATABASE_URI
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.logger.setLevel(logging.DEBUG)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 app.config['DEBUG'] = True
@@ -49,6 +54,19 @@ def all_accounts():
     accounts = db.session.query(Account).all()
     accounts = [account.to_dict() for account in accounts]
     return jsonify(accounts)
+
+
+@app.route('/seeder', methods=['POST'])
+def seeder():
+    accounts_to_create = int(request.json['accounts_to_create'])
+    min_balance = int(request.json['min_balance'])
+    max_balance = int(request.json['max_balance'])
+    for i in range(accounts_to_create):
+        balance = random.randint(min_balance, max_balance)
+        account = Account(user_id=i, balance=balance)
+        db.session.add(account)
+    db.session.commit()
+    return all_accounts()
 
 
 if __name__ == "__main__":

@@ -1,3 +1,6 @@
+import logging
+import random
+
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
@@ -6,7 +9,9 @@ from config import HOST, PORT, SQLALCHEMY_DATABASE_URI
 
 app = Flask(__name__)
 app.config['DEBUG'] = True
+app.logger.setLevel(logging.DEBUG)
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
@@ -51,6 +56,22 @@ def all_products():
     products = db.session.query(Product).all()
     products = [product.to_dict() for product in products]
     return jsonify(products)
+
+
+@app.route('/seeder', methods=['POST'])
+def seeder():
+    products_to_create = int(request.json['products_to_create'])
+    min_price = int(request.json['min_price'])
+    max_price = int(request.json['max_price'])
+    min_stock = int(request.json['min_stock'])
+    max_stock = int(request.json['max_stock'])
+    for i in range(products_to_create):
+        name = f"Product {i}"
+        product = Product(stock_balance=random.randint(min_stock, max_stock),
+                          price=random.randint(min_price, max_price), name=name)
+        db.session.add(product)
+    db.session.commit()
+    return all_products(), 201
 
 
 if __name__ == "__main__":
