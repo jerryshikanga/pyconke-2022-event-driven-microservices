@@ -2,13 +2,14 @@ from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
-from config import DEFAULT_CURRENCY_CODE, HOST, PORT
+from config import DEFAULT_CURRENCY_CODE, HOST, PORT, SQLALCHEMY_DATABASE_URI
 from utils import process_order_request
 from exceptions import RequestsException, UserNotFoundError, InactiveUserError, ProductNotFoundError, \
     InsufficientStockError, InsufficientBalanceError
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+app.config['DEBUG'] = True
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
@@ -22,7 +23,8 @@ class Order(db.Model):
     currency = db.Column(db.String, nullable=False, default="KES")
 
     def to_dict(self):
-        return dict(id=self.id, user_id=self.user_id, balance=self.balance, currency=self.currency)
+        return dict(id=self.id, user_id=self.user_id, product_id=self.product_id,
+                    quantity=self.quantity, total_cost=self.total_cost, currency=self.currency)
 
 
 @app.route('/order/<order_id>')

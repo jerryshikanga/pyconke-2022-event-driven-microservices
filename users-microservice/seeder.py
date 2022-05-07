@@ -1,11 +1,12 @@
 import random
 
 from app import User, db
+from config import USERS_TO_CREATE
 
 
 def create_users():
-    for i in range(100):
-        user = User(name=f"User {i}", active=random.choice([True, False]))
+    for i in range(USERS_TO_CREATE):
+        user = User(name=f"User {i}", active=True)
         db.session.add(user)
     db.session.commit()
 

@@ -2,10 +2,11 @@ from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
-from config import HOST, PORT
+from config import HOST, PORT, SQLALCHEMY_DATABASE_URI
 
 app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+app.config['DEBUG'] = True
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 

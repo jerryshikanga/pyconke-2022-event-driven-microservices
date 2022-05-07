@@ -1,6 +1,4 @@
 import requests
-from flask import current_app as app
-from app import Order, db
 
 from config import USER_MICROSERVICE_URL, PRODUCT_MICROSERVICE_URL, ACCOUNTING_MICROSERVICE_URL
 from exceptions import UserNotFoundError, InactiveUserError, ProductNotFoundError, InsufficientStockError, \
@@ -48,26 +46,37 @@ def create_stock_move(product_id, quantity):
 
 
 def process_order_request(user_id, product_id, quantity, currency):
+    from flask import current_app as app
+    from app import Order, db
+
     user_details = get_user_details(user_id)
     if not user_details:
+        app.logger.warn(f"User {user_id} not found.")
         raise UserNotFoundError
     if not user_details.get('active', False):
+        app.logger.warn(f"User {user_id} inactive.")
         raise InactiveUserError
 
     product_details = get_product_details(product_id)
     if not product_details:
+        app.logger.warn(f"Product {product_id} not found.")
         raise ProductNotFoundError
     if quantity > product_details.get('stock_balance', 0):
+        app.logger.warn(f"Product {product_id} quantity of {product_details.get('stock_balance', 0)}"
+                        f" insufficient for request of {quantity}.")
         raise InsufficientStockError
 
     account_details = get_account_details(user_id)
     if not account_details:
+        app.logger.warn(f"Account for user {user_id} not found.")
         raise UserNotFoundError
 
     total_cost = quantity * product_details.get('price')
     if total_cost > account_details['balance']:
-        raise InsufficientBalanceError(f"Account {account_details['id']} for user {user_id} has insufficient balance of"
-                                       f" {account_details['balance']} for order of cost {total_cost}.")
+        message = f"Account {account_details['id']} for user {user_id} has insufficient balance of" \
+                  f" {account_details['balance']} for order of cost {total_cost}."
+        app.logger.warn(message)
+        raise InsufficientBalanceError(message)
     charge_response = charge_account(account_details['id'], total_cost)
     app.logger.info(f"Charge account {account_details['id']} for order response {charge_response}")
     stock_move_response = create_stock_move(product_id, quantity)

@@ -8,3 +8,4 @@ DEFAULT_CURRENCY_CODE = os.environ.get("DEFAULT_CURRENCY_CODE", "KES")
 HOST = os.environ.get("HOST", "0.0.0.0")
 PORT = os.environ.get("PORT", 5001)
 
+SQLALCHEMY_DATABASE_URI = os.environ.get('SQLALCHEMY_DATABASE_URI', 'sqlite:///app.db')

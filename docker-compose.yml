@@ -1,14 +1,50 @@
 version: "3.6"
 
 services:
-  accounting:
-    build: accounting-microservice/
-    command: bash -c "flask run"
+  ordering:
+    build: ordering-microservice/
+    command: bash -c "python app.py"
     restart: on-failure
     environment:
       HOST: 0.0.0.0
-      PORT: 5000
+      PORT: 5001
+      USER_MICROSERVICE_URL: http://users:5002
+      ACCOUNTING_MICROSERVICE_URL: http://accounting:5003
+      PRODUCT_MICROSERVICE_URL: http://products:5004
     volumes:
       - .:/code
     ports:
-      - "5000:5000"
+      - "5001:5001"
+  users:
+    build: users-microservice/
+    command: bash -c "python app.py"
+    restart: on-failure
+    environment:
+      HOST: 0.0.0.0
+      PORT: 5002
+    volumes:
+      - .:/code
+    ports:
+      - "5002:5002"
+  accounting:
+    build: accounting-microservice/
+    command: bash -c "python app.py"
+    restart: on-failure
+    environment:
+      HOST: 0.0.0.0
+      PORT: 5003
+    volumes:
+      - .:/code
+    ports:
+      - "5003:5003"
+  products:
+    build: products-microservice/
+    command: bash -c "python app.py"
+    restart: on-failure
+    environment:
+      HOST: 0.0.0.0
+      PORT: 5004
+    volumes:
+      - .:/code
+    ports:
+      - "5004:5004"
