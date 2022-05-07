@@ -16,7 +16,3 @@ class InsufficientStockError(Exception):
 
 class InsufficientBalanceError(Exception):
     pass
-
-
-class RequestsException(Exception):
-    pass

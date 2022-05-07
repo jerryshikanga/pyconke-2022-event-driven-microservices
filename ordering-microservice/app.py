@@ -1,15 +1,20 @@
+import logging
+
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from requests.exceptions import MissingSchema, RequestException
 
 from config import DEFAULT_CURRENCY_CODE, HOST, PORT, SQLALCHEMY_DATABASE_URI
 from utils import process_order_request
-from exceptions import RequestsException, UserNotFoundError, InactiveUserError, ProductNotFoundError, \
+from exceptions import UserNotFoundError, InactiveUserError, ProductNotFoundError, \
     InsufficientStockError, InsufficientBalanceError
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['DEBUG'] = True
+app.logger.setLevel(logging.DEBUG)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
@@ -52,8 +57,12 @@ def order():
     try:
         order = process_order_request(user_id, product_id, quantity, currency)
         return order.to_dict()
-    except (RequestsException, InsufficientBalanceError) as e:
-        return jsonify(dict(error=str(e))), 400
+    except InsufficientBalanceError:
+        return jsonify(error=f"User {user_id} has insufficient balance.")
+    except MissingSchema as e:
+        return jsonify(error=f"Invalid url configuration : {e}.")
+    except RequestException as e:
+        return jsonify(dict(error=f"Failed to connect : {e}")), 400
     except UserNotFoundError:
         return jsonify(error=f"User {user_id} not found.")
     except InactiveUserError:

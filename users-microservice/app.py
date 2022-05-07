@@ -1,4 +1,6 @@
-from flask import Flask, jsonify
+import logging
+
+from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
@@ -6,6 +8,8 @@ from config import HOST, PORT, SQLALCHEMY_DATABASE_URI
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.logger.setLevel(logging.DEBUG)
 app.config['DEBUG'] = True
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
@@ -34,6 +38,16 @@ def all_users():
     users = db.session.query(User).all()
     users = [user.to_dict() for user in users]
     return jsonify(users)
+
+
+@app.route('/seeder', methods=['POST'])
+def seeder():
+    users_to_create = int(request.json['users_to_create'])
+    for i in range(users_to_create):
+        user = User(name=f"User {i}", active=True)
+        db.session.add(user)
+    db.session.commit()
+    return all_users(), 201
 
 
 if __name__ == "__main__":

@@ -2,7 +2,7 @@ import requests
 
 from config import USER_MICROSERVICE_URL, PRODUCT_MICROSERVICE_URL, ACCOUNTING_MICROSERVICE_URL
 from exceptions import UserNotFoundError, InactiveUserError, ProductNotFoundError, InsufficientStockError, \
-    InsufficientBalanceError, RequestsException
+    InsufficientBalanceError
 
 
 def get_user_details(user_id):
@@ -10,7 +10,6 @@ def get_user_details(user_id):
     response = requests.get(url)
     if response.status_code // 100 == 2:
         return response.json()
-    raise RequestsException(response.json())
 
 
 def get_product_details(product_id):
@@ -18,7 +17,6 @@ def get_product_details(product_id):
     response = requests.get(url)
     if response.status_code // 100 == 2:
         return response.json()
-    raise RequestsException(response.json())
 
 
 def get_account_details(user_id):
@@ -26,7 +24,6 @@ def get_account_details(user_id):
     response = requests.get(url)
     if response.status_code // 100 == 2:
         return response.json()
-    raise RequestsException(response.json())
 
 
 def charge_account(account_id, amount):
@@ -34,7 +31,6 @@ def charge_account(account_id, amount):
     response = requests.post(url, json=dict(account_id=account_id, amount=amount))
     if response.status_code // 100 == 2:
         return response.json()
-    raise RequestsException(response.json())
 
 
 def create_stock_move(product_id, quantity):
@@ -42,7 +38,6 @@ def create_stock_move(product_id, quantity):
     response = requests.post(url, json=dict(product_id=product_id, quantity=quantity))
     if response.status_code // 100 == 2:
         return response.json()
-    raise RequestsException(response.json())
 
 
 def process_order_request(user_id, product_id, quantity, currency):
