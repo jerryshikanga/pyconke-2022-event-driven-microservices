@@ -7,7 +7,7 @@ from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
-from config import HOST, PORT, SQLALCHEMY_DATABASE_URI, RABBITMQ_DEFAULT_QUEUE_NAME
+from config import HOST, PORT, SQLALCHEMY_DATABASE_URI, RABBITMQ_DEFAULT_QUEUE_NAME, RABBITMQ_HOST, RABBITMQ_PORT
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
@@ -61,7 +61,8 @@ def all_accounts():
 def publish_message_to_queue(body, queue=None, exchange=''):
     if not queue:
         queue = RABBITMQ_DEFAULT_QUEUE_NAME
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    parameters = pika.ConnectionParameters(host=RABBITMQ_HOST, port=RABBITMQ_PORT)
+    connection = pika.BlockingConnection(parameters)
     channel = connection.channel()
     channel.queue_declare(queue=queue)
     channel.basic_publish(exchange=exchange, routing_key=queue, body=body)
@@ -77,9 +78,9 @@ def seeder():
         balance = random.randint(min_balance, max_balance)
         account = Account(user_id=i, balance=balance, currency="KES")
         db.session.add(account)
+        db.session.flush()
         body = dict(model="ACCOUNT", data=account.to_dict())
         publish_message_to_queue(json.dumps(body))
-    db.session.commit()
     return all_accounts()
 
 

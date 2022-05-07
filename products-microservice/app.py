@@ -70,6 +70,7 @@ def seeder():
         product = Product(stock_balance=random.randint(min_stock, max_stock),
                           price=random.randint(min_price, max_price), name=name)
         db.session.add(product)
+        db.session.flush()
     db.session.commit()
     return all_products(), 201
 

@@ -46,7 +46,6 @@ def seeder():
     for i in range(users_to_create):
         user = User(name=f"User {i}", active=True)
         db.session.add(user)
-    db.session.commit()
     return all_users(), 201
 
 

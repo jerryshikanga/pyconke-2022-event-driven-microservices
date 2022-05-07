@@ -1,12 +1,18 @@
 import json
 
+import redis
 import pika
-from config import RABBITMQ_HOST, RABBITMQ_PORT, RABBITMQ_DEFAULT_QUEUE_NAME
+from config import RABBITMQ_HOST, RABBITMQ_PORT, RABBITMQ_DEFAULT_QUEUE_NAME, REDIS_HOST, REDIS_PORT
+
+redis_store = redis.Redis(host=REDIS_HOST, port=REDIS_PORT)
 
 
 def callback(ch, method, properties, body):
     body = json.loads(body)
     print(f"Received {body}")
+    model = body['model']
+    data = body['data']
+    id_ = data['id']
 
 
 def consume_messages():
