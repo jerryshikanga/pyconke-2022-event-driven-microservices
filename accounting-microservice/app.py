@@ -1,5 +1,6 @@
 import logging
 import random
+import pika
 
 from flask import Flask, jsonify, request
 from flask_sqlalchemy import SQLAlchemy
@@ -56,16 +57,25 @@ def all_accounts():
     return jsonify(accounts)
 
 
+def publish_message_to_queue(queue='hello', body='Hello world', exchange=''):
+    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+    channel = connection.channel()
+    channel.queue_declare(queue=queue)
+    channel.basic_publish(exchange=exchange, routing_key=queue, body=body)
+    connection.close()
+
+
 @app.route('/seeder', methods=['POST'])
 def seeder():
-    accounts_to_create = int(request.json['accounts_to_create'])
-    min_balance = int(request.json['min_balance'])
-    max_balance = int(request.json['max_balance'])
-    for i in range(accounts_to_create):
-        balance = random.randint(min_balance, max_balance)
-        account = Account(user_id=i, balance=balance)
-        db.session.add(account)
-    db.session.commit()
+    publish_message_to_queue()
+    # accounts_to_create = int(request.json['accounts_to_create'])
+    # min_balance = int(request.json['min_balance'])
+    # max_balance = int(request.json['max_balance'])
+    # for i in range(accounts_to_create):
+    #     balance = random.randint(min_balance, max_balance)
+    #     account = Account(user_id=i, balance=balance)
+    #     db.session.add(account)
+    # db.session.commit()
     return all_accounts()
 
 
